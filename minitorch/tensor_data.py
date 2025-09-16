@@ -125,9 +125,35 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     Raises:
         IndexingError : if cannot broadcast
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
-
+    union = []
+    ls1 = len(shape1)
+    ls2 = len(shape2)
+    
+    # If same shape, take max of each dim 
+    if ls1 == ls2:
+        for i, j in zip(shape1, shape2):
+            if i != j and not (i == 1 or j == 1):
+                raise IndexingError(f"Cannot broadcast shapes {shape1} x {shape2}. Dim {i} cannot match dim {j}")
+            union.append(max(i, j))
+            
+    else:
+        revs1 = list(reversed(shape1))
+        revs2 = list(reversed(shape2))
+        big_shape = revs1 if ls1 > ls2 else revs2 
+        small_shape = revs1 if ls1 < ls2 else revs2 
+    
+        for i in range(len(big_shape)):
+            bsx = big_shape[i]
+            if i >= len(small_shape):
+                union.append(bsx)
+            else:
+                ssx = small_shape[i]
+                if bsx != ssx and not (bsx == 1 or ssx == 1):
+                    raise IndexingError 
+                
+                union.append(max(bsx, ssx))
+ 
+    return tuple(reversed(union))
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
     layout = [1]
