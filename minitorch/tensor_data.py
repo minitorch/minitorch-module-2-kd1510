@@ -42,8 +42,11 @@ def index_to_position(index: Index, strides: Strides) -> int:
     Returns:
         Position in storage
     """
-
-    return sum([i * s for i, s in zip(index, strides)])
+    pos = 0
+    for i, s in enumerate(strides):
+        pos += (s * index[i])
+    print(f"Calculating Pos. Index: {index}, Strides: {strides}. PosCalculated: {pos}")
+    return pos 
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
     """
@@ -58,28 +61,31 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    # ix = []
-    # for i, d in enumerate(shape):
+    print("To index called.")
+    ix = []
+    for i, d in enumerate(reversed(shape)):
+        print(f"Current Ordinal: {ordinal}")
+        if i == 0:
+            ix.append(ordinal % d)
+        else:
+            # Multiply the dimensions after this one
+            after_dims = shape[len(shape)-i:]
+            print(f"Current dim: {d}. i: {i}. After dims: {after_dims}")
+            total = 1
+            for d2 in after_dims:
+                total *= d2
+            print(f"Total: {total}")
 
-    #     # Multiply the dimensions after this one
-    #     after_dims = shape[i+1:]
-    #     total = 1
-    #     for d2 in after_dims:
-    #         total *= d2
-
-    #     # Divide ordinal by this total
-    #     divided = ordinal // total
-        
-    #     # Divide by modulo this dimension
-    #     ix.append(divided % d)
-
-    # # out_index[:] = list(ix)
+            # Divide ordinal by this total
+            divided = ordinal // total
+            
+            # Divide by modulo this dimension
+            ix.append(divided % d)
 
     if ordinal < 0:
         raise IndexingError
     
-    out_index[:] = np.unravel_index(ordinal, shape)
-
+    out_index[:] = list(reversed(ix))
 
 
 def broadcast_index(
@@ -209,6 +215,7 @@ class TensorData:
     def indices(self) -> Iterable[UserIndex]:
         lshape: Shape = array(self.shape)
         out_index: Index = array(self.shape)
+        print(f"Self size: {self.size}")
         for i in range(self.size):
             to_index(i, lshape, out_index)
             yield tuple(out_index)
@@ -241,12 +248,14 @@ class TensorData:
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
         new_shape = []
-        for o in order:
-            new_shape.append(self.shape[o])
+        new_strides = []
+        for i in range(len(self.shape)):
+            new_shape.append(self.shape[order[i]])
+            new_strides.append(self.strides[order[i]])
 
-        self.shape = array(new_shape)
+        copy = TensorData(self._storage, tuple(new_shape), tuple(new_strides))
         
-        return self
+        return copy 
 
     def to_string(self) -> str:
         s = ""
