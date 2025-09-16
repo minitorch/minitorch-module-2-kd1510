@@ -38,6 +38,13 @@ def test_layout_bad() -> None:
     data = [0] * 3 * 5
     minitorch.TensorData(data, (3, 5), (6,))
 
+def test_krish_test_indices_simple():
+    data = [0] * 2 * 2 * 2 
+    tdata = minitorch.TensorData(data, (2, 2, 2))
+    res1 = (list(tdata.indices()))
+
+    breakpoint()
+    assert 1 == 2
 
 @pytest.mark.task2_1
 @given(tensor_data())

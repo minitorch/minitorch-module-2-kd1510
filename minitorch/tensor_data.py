@@ -43,9 +43,7 @@ def index_to_position(index: Index, strides: Strides) -> int:
         Position in storage
     """
 
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
-
+    return sum([i * s for i, s in zip(index, strides)])
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
     """
@@ -60,8 +58,28 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
+    # ix = []
+    # for i, d in enumerate(shape):
+
+    #     # Multiply the dimensions after this one
+    #     after_dims = shape[i+1:]
+    #     total = 1
+    #     for d2 in after_dims:
+    #         total *= d2
+
+    #     # Divide ordinal by this total
+    #     divided = ordinal // total
+        
+    #     # Divide by modulo this dimension
+    #     ix.append(divided % d)
+
+    # # out_index[:] = list(ix)
+
+    if ordinal < 0:
+        raise IndexingError
+    
+    out_index[:] = np.unravel_index(ordinal, shape)
+
 
 
 def broadcast_index(
@@ -222,8 +240,13 @@ class TensorData:
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
-        # TODO: Implement for Task 2.1.
-        raise NotImplementedError("Need to implement for Task 2.1")
+        new_shape = []
+        for o in order:
+            new_shape.append(self.shape[o])
+
+        self.shape = array(new_shape)
+        
+        return self
 
     def to_string(self) -> str:
         s = ""
