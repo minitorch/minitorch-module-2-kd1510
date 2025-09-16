@@ -56,16 +56,6 @@ def test_krish_enumeration_simple():
     
     for ix in res1:
         print(f"Index: {ix}, pos: {tdata.index(ix)}")
-        
-def test_krish_indexing_simple():
-    data = [0] * 2 * 1 
-    tdata = minitorch.TensorData(data, (2, 1))
-    indices = (list(tdata.indices()))
-    
-    breakpoint()
-     
-    
-    
 
 @pytest.mark.task2_1
 @given(tensor_data())
@@ -103,12 +93,6 @@ def test_index(tensor_data: TensorData) -> None:
         with pytest.raises(minitorch.IndexingError):
             base = [0] * (tensor_data.dims - 1)
             tensor_data.index(tuple(base))
-
-def test_krish_permute():
-    data = [0] * 2 * 1
-    tdata = TensorData(data, (2, 1), (2, 1))
-    prt = tdata.permute(*[1, 0])
-    breakpoint()
 
 @pytest.mark.task2_1
 @given(data())
