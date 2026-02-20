@@ -21,15 +21,20 @@ def test_create(t1: List[float]) -> None:
         assert t1[i] == t2[i]
 
 def test_krish_map():
-    # t1 = Tensor.make([1, 2, 3, 4], (1, 4), backend=SimpleBackend)
-    # t2 = Tensor.make([1, 1, 1, 1], (1, 4), backend=SimpleBackend)
-    # assert all((t1 + t2)._tensor._storage == [2, 3, 4, 5])
+    # (1, 4) x (1, 4)
+    t1 = Tensor.make([1, 2, 3, 4], (1, 4), backend=SimpleBackend)
+    t2 = Tensor.make([1, 1, 1, 1], (1, 4), backend=SimpleBackend)
+    assert all((t1 + t2)._tensor._storage == [2, 3, 4, 5])
 
+    # # # (1, 4) x (1, 1)
     t1 = Tensor.make([1, 2, 3, 4], (1, 4), backend=SimpleBackend)
     t2 = Tensor.make([1], (1, 1), backend=SimpleBackend)
     assert all((t1 + t2)._tensor._storage == [2, 3, 4, 5])
 
-    breakpoint()
+    # # (2, 2) x (2, 1)
+    t1 = Tensor.make([1, 2, 3, 4], (2, 2), backend=SimpleBackend)
+    t2 = Tensor.make([10, 100], (2, 1), backend=SimpleBackend)
+    assert all((t1 + t2)._tensor._storage == [11, 12, 103, 104])
 
 
 @given(tensors())

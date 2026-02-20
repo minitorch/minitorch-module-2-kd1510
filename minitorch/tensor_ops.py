@@ -336,23 +336,29 @@ def tensor_zip(fn: Callable[[float, float], float]) -> Any:
             match (a_dim, b_dim):
                 case (1, _):
                     print("Broadcasting A")
-                    breakpoint()
                 case (_, 1):
                     print("Broadcasting B")
                     # Get all the elements of a_storage for this dimension
                     print("Getting elements of a")
-                    for j in range(a_dim):
+                    for j in range(len(out)):
                         a = a_storage[a_stride * j]
-                        print(f"Element: {a}")
+                        print(f"A Element: {a}")
 
-                        # b will have a single value as that dim is 1
-                        b = b_storage[b_stride * 0]
-                        print(f"Element: {b}")
+                        # I wrote with some trial and error, I sort of get why this works.
+                        # j // a_dim gives you which "row" we are in.
+                        # Each "row" in a needs to be zipped with each element of b,
+                        # so we iterate over each element of b based on every time we move one "row" up
+                        # in the flat out storage!
+                        print(f"j: {j}, a_dim: {a_dim}, j//a_dim: {j//a_dim}")
+                        b = b_storage[j // a_dim]
+
+                        print(f"B Element: {b}")
 
                         # Apply the function and store it in the correct position in out_storage
                         # Will be the same place as a_storage (for now)
                         out[a_stride * j] = fn(a, b)
 
+            # TODO!
             # Need a case where one of the dimensions DOES NOT EXIST.
 
     return _zip
