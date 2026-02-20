@@ -1,5 +1,6 @@
 from typing import Callable, Iterable, List, Tuple
 
+from minitorch.tensor_ops import SimpleBackend
 import pytest
 from hypothesis import given
 from hypothesis.strategies import DataObject, data, lists, permutations
@@ -18,6 +19,17 @@ def test_create(t1: List[float]) -> None:
     t2 = tensor(t1)
     for i in range(len(t1)):
         assert t1[i] == t2[i]
+
+def test_krish_map():
+    # t1 = Tensor.make([1, 2, 3, 4], (1, 4), backend=SimpleBackend)
+    # t2 = Tensor.make([1, 1, 1, 1], (1, 4), backend=SimpleBackend)
+    # assert all((t1 + t2)._tensor._storage == [2, 3, 4, 5])
+
+    t1 = Tensor.make([1, 2, 3, 4], (1, 4), backend=SimpleBackend)
+    t2 = Tensor.make([1], (1, 1), backend=SimpleBackend)
+    assert all((t1 + t2)._tensor._storage == [2, 3, 4, 5])
+
+    breakpoint()
 
 
 @given(tensors())

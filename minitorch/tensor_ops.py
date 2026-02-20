@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from ast import Continue
 from typing import TYPE_CHECKING, Any, Callable, Optional, Type
 
 import numpy as np
@@ -268,6 +269,7 @@ def tensor_map(fn: Callable[[float], float]) -> Any:
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
+        breakpoint()
         # TODO: Implement for Task 2.3.
         raise NotImplementedError("Need to implement for Task 2.3")
 
@@ -319,7 +321,39 @@ def tensor_zip(fn: Callable[[float, float], float]) -> Any:
         b_strides: Strides,
     ) -> None:
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+
+        if (a_shape == b_shape).all():
+            for i in range(len(a_storage)):
+                out[i] = fn(a_storage[i], b_storage[i])
+            return
+
+        for (a_dim, b_dim, a_stride, b_stride) in zip(a_shape, b_shape, a_strides, b_strides):
+            # If the dims are equal, skip.
+            print((a_dim, b_dim, a_stride, b_stride))
+            if a_dim == b_dim:
+                continue
+
+            match (a_dim, b_dim):
+                case (1, _):
+                    print("Broadcasting A")
+                    breakpoint()
+                case (_, 1):
+                    print("Broadcasting B")
+                    # Get all the elements of a_storage for this dimension
+                    print("Getting elements of a")
+                    for j in range(a_dim):
+                        a = a_storage[a_stride * j]
+                        print(f"Element: {a}")
+
+                        # b will have a single value as that dim is 1
+                        b = b_storage[b_stride * 0]
+                        print(f"Element: {b}")
+
+                        # Apply the function and store it in the correct position in out_storage
+                        # Will be the same place as a_storage (for now)
+                        out[a_stride * j] = fn(a, b)
+
+            # Need a case where one of the dimensions DOES NOT EXIST.
 
     return _zip
 

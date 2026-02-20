@@ -45,8 +45,7 @@ def index_to_position(index: Index, strides: Strides) -> int:
     pos = 0
     for i, s in enumerate(strides):
         pos += (s * index[i])
-    print(f"Calculating Pos. Index: {index}, Strides: {strides}. PosCalculated: {pos}")
-    return pos 
+    return pos
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
     """
@@ -61,30 +60,32 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    print("To index called.")
     ix = []
-    for i, d in enumerate(reversed(shape)):
-        print(f"Current Ordinal: {ordinal}")
+
+    for i, dimsize in enumerate(reversed(shape)):
         if i == 0:
-            ix.append(ordinal % d)
+            ix.append(ordinal % dimsize)
         else:
-            # Multiply the dimensions after this one
+            # Multiply together all the dimensions after this one.
+            # This gives us the stride for the current dimension.
             after_dims = shape[len(shape)-i:]
-            print(f"Current dim: {d}. i: {i}. After dims: {after_dims}")
             total = 1
             for d2 in after_dims:
                 total *= d2
-            print(f"Total: {total}")
 
-            # Divide ordinal by this total
+            # Divide ordinal by the stride
+            # This tells us how many units of this dimension have elapsed
             divided = ordinal // total
-            
+
             # Divide by modulo this dimension
-            ix.append(divided % d)
+            # This is to eliminate the contribution from the higher dimensions
+            # Think of a clock and where the minute hand would be.
+            # e.g 121 minutes % 60 = 2. The minute hand would be on 2.
+            ix.append(divided % dimsize)
 
     if ordinal < 0:
         raise IndexingError
-    
+
     out_index[:] = list(reversed(ix))
 
 
@@ -128,20 +129,23 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     union = []
     ls1 = len(shape1)
     ls2 = len(shape2)
-    
-    # If same shape, take max of each dim 
+
+    # If same shape, take max of each dim
     if ls1 == ls2:
         for i, j in zip(shape1, shape2):
+            # Note, is this right? Can't we broadcast multiples? Answer: No, it would be ambiguous!
+            # Do you repeat in order, or all together per row etc?
+            # Repeats have many permutations
             if i != j and not (i == 1 or j == 1):
                 raise IndexingError(f"Cannot broadcast shapes {shape1} x {shape2}. Dim {i} cannot match dim {j}")
             union.append(max(i, j))
-            
+
     else:
         revs1 = list(reversed(shape1))
         revs2 = list(reversed(shape2))
-        big_shape = revs1 if ls1 > ls2 else revs2 
-        small_shape = revs1 if ls1 < ls2 else revs2 
-    
+        big_shape = revs1 if ls1 > ls2 else revs2
+        small_shape = revs1 if ls1 < ls2 else revs2
+
         for i in range(len(big_shape)):
             bsx = big_shape[i]
             if i >= len(small_shape):
@@ -149,10 +153,10 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
             else:
                 ssx = small_shape[i]
                 if bsx != ssx and not (bsx == 1 or ssx == 1):
-                    raise IndexingError 
-                
+                    raise IndexingError
+
                 union.append(max(bsx, ssx))
- 
+
     return tuple(reversed(union))
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
@@ -241,7 +245,6 @@ class TensorData:
     def indices(self) -> Iterable[UserIndex]:
         lshape: Shape = array(self.shape)
         out_index: Index = array(self.shape)
-        print(f"Self size: {self.size}")
         for i in range(self.size):
             to_index(i, lshape, out_index)
             yield tuple(out_index)
@@ -280,8 +283,8 @@ class TensorData:
             new_strides.append(self.strides[order[i]])
 
         copy = TensorData(self._storage, tuple(new_shape), tuple(new_strides))
-        
-        return copy 
+
+        return copy
 
     def to_string(self) -> str:
         s = ""
