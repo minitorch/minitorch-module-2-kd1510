@@ -17,7 +17,7 @@ def add(x: float, y: float) -> float:
 
 
 def neg(x: float) -> float:
-    return -float(x)
+    return (-1.0 * x) + 0.0
 
 
 def lt(x: float, y: float) -> bool:
@@ -34,14 +34,14 @@ def eq(x: float, y: float) -> bool:
 
 def is_close(x: float, y: float) -> bool:
     epsilon = abs(x - y)
-    if epsilon > 1e-2:
+    if epsilon > 1e-3:
         return False
     else:
         return True
 
 
 def sigmoid(x: float) -> float:
-    return 1.0 / (1 + math.exp(-x))
+    return 1.0 / (1.0 + math.exp(-x))
 
 
 def relu(x: float) -> float:

@@ -108,8 +108,21 @@ def broadcast_index(
     Returns:
         None
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    # 1. Calculate the 'rank' difference (e.g., if big is 3D and small is 2D, offset is 1)
+    offset = len(big_shape) - len(shape)
+
+    # 2. Loop through every dimension of the small tensor
+    for i in range(len(shape)):
+        # big_index_pos accounts for the leading dimensions missing in the small tensor
+        big_index_pos = i + offset
+
+        if shape[i] == 1:
+            # If the dimension is 1, we force the index to 0 (Broadcasting!)
+            out_index[i] = 0
+        else:
+            # Otherwise, the small dimension must match the big dimension
+            # and we take the index directly.
+            out_index[i] = big_index[big_index_pos]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:

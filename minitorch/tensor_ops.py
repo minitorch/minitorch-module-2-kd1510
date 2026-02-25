@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from ast import Continue
+from itertools import zip_longest
 from typing import TYPE_CHECKING, Any, Callable, Optional, Type
 
 import numpy as np
@@ -21,8 +22,7 @@ if TYPE_CHECKING:
 
 
 class MapProto(Protocol):
-    def __call__(self, x: Tensor, out: Optional[Tensor] = ..., /) -> Tensor:
-        ...
+    def __call__(self, x: Tensor, out: Optional[Tensor] = ..., /) -> Tensor: ...
 
 
 class TensorOps:
@@ -137,7 +137,7 @@ class SimpleOps(TensorOps):
 
     @staticmethod
     def zip(
-        fn: Callable[[float, float], float]
+        fn: Callable[[float, float], float],
     ) -> Callable[["Tensor", "Tensor"], "Tensor"]:
         """
         Higher-order tensor zip function ::
@@ -269,9 +269,22 @@ def tensor_map(fn: Callable[[float], float]) -> Any:
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        breakpoint()
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        # Create temporary index buffers
+        out_index = np.zeros(len(out_shape), dtype=np.int32)
+        in_index = np.zeros(len(in_shape), dtype=np.int32)
+
+        for i in range(len(out)):
+            # 1. Convert flat output position to multi-dimensional index
+            to_index(i, out_shape, out_index)
+
+            # 2. Map output index to input index (handling broadcasting)
+            broadcast_index(out_index, out_shape, in_shape, in_index)
+
+            # 3. Convert input index to flat position in storage
+            in_pos = index_to_position(in_index, in_strides)
+
+            # 4. Apply function and store result
+            out[i] = fn(in_storage[in_pos])
 
     return _map
 
@@ -321,45 +334,25 @@ def tensor_zip(fn: Callable[[float, float], float]) -> Any:
         b_strides: Strides,
     ) -> None:
         # TODO: Implement for Task 2.3.
+        # Create temporary index buffers to avoid repeated allocation
+        out_index = np.zeros(len(out_shape), dtype=np.int32)
+        a_index = np.zeros(len(a_shape), dtype=np.int32)
+        b_index = np.zeros(len(b_shape), dtype=np.int32)
 
-        if (a_shape == b_shape).all():
-            for i in range(len(a_storage)):
-                out[i] = fn(a_storage[i], b_storage[i])
-            return
+        for i in range(len(out)):
+            # 1. Where am I in the output tensor?
+            to_index(i, out_shape, out_index)
 
-        for (a_dim, b_dim, a_stride, b_stride) in zip(a_shape, b_shape, a_strides, b_strides):
-            # If the dims are equal, skip.
-            print((a_dim, b_dim, a_stride, b_stride))
-            if a_dim == b_dim:
-                continue
+            # 2. Where is that in Tensor A (handling broadcasting)?
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            a_pos = index_to_position(a_index, a_strides)
 
-            match (a_dim, b_dim):
-                case (1, _):
-                    print("Broadcasting A")
-                case (_, 1):
-                    print("Broadcasting B")
-                    # Get all the elements of a_storage for this dimension
-                    print("Getting elements of a")
-                    for j in range(len(out)):
-                        a = a_storage[a_stride * j]
-                        print(f"A Element: {a}")
+            # 3. Where is that in Tensor B (handling broadcasting)?
+            broadcast_index(out_index, out_shape, b_shape, b_index)
+            b_pos = index_to_position(b_index, b_strides)
 
-                        # I wrote with some trial and error, I sort of get why this works.
-                        # j // a_dim gives you which "row" we are in.
-                        # Each "row" in a needs to be zipped with each element of b,
-                        # so we iterate over each element of b based on every time we move one "row" up
-                        # in the flat out storage!
-                        print(f"j: {j}, a_dim: {a_dim}, j//a_dim: {j//a_dim}")
-                        b = b_storage[j // a_dim]
-
-                        print(f"B Element: {b}")
-
-                        # Apply the function and store it in the correct position in out_storage
-                        # Will be the same place as a_storage (for now)
-                        out[a_stride * j] = fn(a, b)
-
-            # TODO!
-            # Need a case where one of the dimensions DOES NOT EXIST.
+            # 4. Grab the data, run the function, and save it
+            out[i] = fn(a_storage[a_pos], b_storage[b_pos])
 
     return _zip
 
