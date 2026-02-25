@@ -1,5 +1,6 @@
 from typing import Callable, Iterable, List, Tuple
 
+from minitorch.tensor_ops import SimpleBackend
 import pytest
 from hypothesis import given
 from hypothesis.strategies import DataObject, data, lists, permutations
@@ -18,6 +19,29 @@ def test_create(t1: List[float]) -> None:
     t2 = tensor(t1)
     for i in range(len(t1)):
         assert t1[i] == t2[i]
+
+def test_krish_zip():
+    # (1, 4) x (1, 4)
+    t1 = Tensor.make([1, 2, 3, 4], (1, 4), backend=SimpleBackend)
+    t2 = Tensor.make([1, 1, 1, 1], (1, 4), backend=SimpleBackend)
+    assert all((t1 + t2)._tensor._storage == [2, 3, 4, 5])
+
+    # # # # (1, 4) x (1, 1)
+    t1 = Tensor.make([1, 2, 3, 4], (1, 4), backend=SimpleBackend)
+    t2 = Tensor.make([1], (1,), backend=SimpleBackend)
+    assert all((t1 + t2)._tensor._storage == [2, 3, 4, 5])
+
+    # # # (2, 2) x (2, 1)
+    t1 = Tensor.make([1, 2, 3, 4], (2, 2), backend=SimpleBackend)
+    t2 = Tensor.make([10, 100], (2, 1), backend=SimpleBackend)
+    assert all((t1 + t2)._tensor._storage == [11, 12, 103, 104])
+
+def test_krish_map():
+    t1 = Tensor.make([2, 4, 6, 8], (1, 4), backend=SimpleBackend)
+    assert all((t1 / 2)._tensor._storage == [1.0, 2.0, 3.0, 4.0])
+
+    t1 = Tensor.make([2, 4, 6, 8], (2, 2), backend=SimpleBackend)
+    assert all((t1 - 1)._tensor._storage == [1.0, 3.0, 5.0, 7.0])
 
 
 @given(tensors())

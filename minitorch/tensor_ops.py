@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from ast import Continue
+from itertools import zip_longest
 from typing import TYPE_CHECKING, Any, Callable, Optional, Type
 
 import numpy as np
@@ -20,8 +22,7 @@ if TYPE_CHECKING:
 
 
 class MapProto(Protocol):
-    def __call__(self, x: Tensor, out: Optional[Tensor] = ..., /) -> Tensor:
-        ...
+    def __call__(self, x: Tensor, out: Optional[Tensor] = ..., /) -> Tensor: ...
 
 
 class TensorOps:
@@ -136,7 +137,7 @@ class SimpleOps(TensorOps):
 
     @staticmethod
     def zip(
-        fn: Callable[[float, float], float]
+        fn: Callable[[float, float], float],
     ) -> Callable[["Tensor", "Tensor"], "Tensor"]:
         """
         Higher-order tensor zip function ::
@@ -268,8 +269,22 @@ def tensor_map(fn: Callable[[float], float]) -> Any:
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        # Create temporary index buffers
+        out_index = np.zeros(len(out_shape), dtype=np.int32)
+        in_index = np.zeros(len(in_shape), dtype=np.int32)
+
+        for i in range(len(out)):
+            # 1. Convert flat output position to multi-dimensional index
+            to_index(i, out_shape, out_index)
+
+            # 2. Map output index to input index (handling broadcasting)
+            broadcast_index(out_index, out_shape, in_shape, in_index)
+
+            # 3. Convert input index to flat position in storage
+            in_pos = index_to_position(in_index, in_strides)
+
+            # 4. Apply function and store result
+            out[i] = fn(in_storage[in_pos])
 
     return _map
 
@@ -319,7 +334,25 @@ def tensor_zip(fn: Callable[[float, float], float]) -> Any:
         b_strides: Strides,
     ) -> None:
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        # Create temporary index buffers to avoid repeated allocation
+        out_index = np.zeros(len(out_shape), dtype=np.int32)
+        a_index = np.zeros(len(a_shape), dtype=np.int32)
+        b_index = np.zeros(len(b_shape), dtype=np.int32)
+
+        for i in range(len(out)):
+            # 1. Where am I in the output tensor?
+            to_index(i, out_shape, out_index)
+
+            # 2. Where is that in Tensor A (handling broadcasting)?
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            a_pos = index_to_position(a_index, a_strides)
+
+            # 3. Where is that in Tensor B (handling broadcasting)?
+            broadcast_index(out_index, out_shape, b_shape, b_index)
+            b_pos = index_to_position(b_index, b_strides)
+
+            # 4. Grab the data, run the function, and save it
+            out[i] = fn(a_storage[a_pos], b_storage[b_pos])
 
     return _zip
 

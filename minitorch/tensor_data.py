@@ -42,10 +42,10 @@ def index_to_position(index: Index, strides: Strides) -> int:
     Returns:
         Position in storage
     """
-
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
-
+    pos = 0
+    for i, s in enumerate(strides):
+        pos += (s * index[i])
+    return pos
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
     """
@@ -60,8 +60,33 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
+    ix = []
+
+    for i, dimsize in enumerate(reversed(shape)):
+        if i == 0:
+            ix.append(ordinal % dimsize)
+        else:
+            # Multiply together all the dimensions after this one.
+            # This gives us the stride for the current dimension.
+            after_dims = shape[len(shape)-i:]
+            total = 1
+            for d2 in after_dims:
+                total *= d2
+
+            # Divide ordinal by the stride
+            # This tells us how many units of this dimension have elapsed
+            divided = ordinal // total
+
+            # Divide by modulo this dimension
+            # This is to eliminate the contribution from the higher dimensions
+            # Think of a clock and where the minute hand would be.
+            # e.g 121 minutes % 60 = 2. The minute hand would be on 2.
+            ix.append(divided % dimsize)
+
+    if ordinal < 0:
+        raise IndexingError
+
+    out_index[:] = list(reversed(ix))
 
 
 def broadcast_index(
@@ -83,8 +108,21 @@ def broadcast_index(
     Returns:
         None
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    # 1. Calculate the 'rank' difference (e.g., if big is 3D and small is 2D, offset is 1)
+    offset = len(big_shape) - len(shape)
+
+    # 2. Loop through every dimension of the small tensor
+    for i in range(len(shape)):
+        # big_index_pos accounts for the leading dimensions missing in the small tensor
+        big_index_pos = i + offset
+
+        if shape[i] == 1:
+            # If the dimension is 1, we force the index to 0 (Broadcasting!)
+            out_index[i] = 0
+        else:
+            # Otherwise, the small dimension must match the big dimension
+            # and we take the index directly.
+            out_index[i] = big_index[big_index_pos]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -101,9 +139,38 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     Raises:
         IndexingError : if cannot broadcast
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    union = []
+    ls1 = len(shape1)
+    ls2 = len(shape2)
 
+    # If same shape, take max of each dim
+    if ls1 == ls2:
+        for i, j in zip(shape1, shape2):
+            # Note, is this right? Can't we broadcast multiples? Answer: No, it would be ambiguous!
+            # Do you repeat in order, or all together per row etc?
+            # Repeats have many permutations
+            if i != j and not (i == 1 or j == 1):
+                raise IndexingError(f"Cannot broadcast shapes {shape1} x {shape2}. Dim {i} cannot match dim {j}")
+            union.append(max(i, j))
+
+    else:
+        revs1 = list(reversed(shape1))
+        revs2 = list(reversed(shape2))
+        big_shape = revs1 if ls1 > ls2 else revs2
+        small_shape = revs1 if ls1 < ls2 else revs2
+
+        for i in range(len(big_shape)):
+            bsx = big_shape[i]
+            if i >= len(small_shape):
+                union.append(bsx)
+            else:
+                ssx = small_shape[i]
+                if bsx != ssx and not (bsx == 1 or ssx == 1):
+                    raise IndexingError
+
+                union.append(max(bsx, ssx))
+
+    return tuple(reversed(union))
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
     layout = [1]
@@ -222,8 +289,15 @@ class TensorData:
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
-        # TODO: Implement for Task 2.1.
-        raise NotImplementedError("Need to implement for Task 2.1")
+        new_shape = []
+        new_strides = []
+        for i in range(len(self.shape)):
+            new_shape.append(self.shape[order[i]])
+            new_strides.append(self.strides[order[i]])
+
+        copy = TensorData(self._storage, tuple(new_shape), tuple(new_strides))
+
+        return copy
 
     def to_string(self) -> str:
         s = ""

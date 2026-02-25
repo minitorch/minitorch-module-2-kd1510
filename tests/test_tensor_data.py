@@ -38,6 +38,24 @@ def test_layout_bad() -> None:
     data = [0] * 3 * 5
     minitorch.TensorData(data, (3, 5), (6,))
 
+def test_krish_enumeration_simple():
+    data = [0] * 2 * 2
+    tdata = minitorch.TensorData(data, (2, 2))
+    res1 = (list(tdata.indices()))
+    assert res1 == [(0,0), (0, 1), (1,0), (1, 1)]
+
+    data = [0] * 1 * 2 * 1
+    tdata = minitorch.TensorData(data, (1, 2, 1))
+    res1 = (list(tdata.indices()))
+    assert res1 == [(0,0,0), (0, 1,0)]
+
+    data = [0] * 2 * 1
+    tdata = minitorch.TensorData(data, (2, 1))
+    res1 = (list(tdata.indices()))
+    assert res1 == [(0,0), (1, 0)]
+
+    for ix in res1:
+        print(f"Index: {ix}, pos: {tdata.index(ix)}")
 
 @pytest.mark.task2_1
 @given(tensor_data())
@@ -76,7 +94,6 @@ def test_index(tensor_data: TensorData) -> None:
             base = [0] * (tensor_data.dims - 1)
             tensor_data.index(tuple(base))
 
-
 @pytest.mark.task2_1
 @given(data())
 def test_permute(data: DataObject) -> None:
@@ -92,8 +109,6 @@ def test_permute(data: DataObject) -> None:
 # ## Tasks 2.2
 
 # Check basic properties of broadcasting.
-
-
 @pytest.mark.task2_2
 def test_shape_broadcast() -> None:
     c = minitorch.shape_broadcast((1,), (5, 5))
