@@ -387,8 +387,38 @@ def tensor_reduce(fn: Callable[[float, float], float]) -> Any:
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        """
+        This basically works by mapping each input index to an output index, zeroing out the dimension 
+        in the index that we reduce over. 
+        This means that the *same* element in output storage will get mapped to by multiple elements 
+        of the input. 
+        We can apply the reduction function over the existing value in that out_storage 
+        position and the incoming elements that map to the same output_storage location.
+        """
+        input_index = np.zeros(len(a_shape), dtype=np.int32)
+
+        # Iterate over each element of the input storage
+        for i in range(len(a_storage)):
+            # Find out the index for the a_tensor for the current element, i.e (3, 2, 2)
+            value = a_storage[i]
+            to_index(i, a_shape, input_index)
+
+            # The output tensor index will be just the reducing dimension removed, i.e dim 1, (3, 0, 2)
+            # Setting to zero means when we calculate the position in out storage, 
+            # the stride of that dim does not contribute.
+            output_index = input_index.copy() # set REDUCE_DIM to 0
+            output_index[reduce_dim] = 0
+
+            # We can simply apply the function to the current value of the output storage at that index,
+            # With the current value of the output storage at that index and the new input value, and set it
+            output_storage_ix = index_to_position(output_index, out_strides)
+            out[output_storage_ix] = fn(out[output_storage_ix], value)
+
+            # Once we iterate through every element in the input, they will have been reduced to the output 
+            # indices incrementally.
+
+        return None
+        
 
     return _reduce
 

@@ -36,12 +36,15 @@ def test_krish_zip():
     t2 = Tensor.make([10, 100], (2, 1), backend=SimpleBackend)
     assert all((t1 + t2)._tensor._storage == [11, 12, 103, 104])
 
-def test_krish_map():
-    t1 = Tensor.make([2, 4, 6, 8], (1, 4), backend=SimpleBackend)
-    assert all((t1 / 2)._tensor._storage == [1.0, 2.0, 3.0, 4.0])
+def test_krish_reduce():
+    # t1 = Tensor.make([1,3,5,7], (4,), backend=SimpleBackend)
+    # t1.sum(dim=0)
+    
+    # t1 = Tensor.make([i for i in range(12)], (3, 2, 2), backend=SimpleBackend)
+    t1 = Tensor.make([i for i in range(6)], (2, 3), backend=SimpleBackend)
+    t2 = t1.sum(dim=0)
 
-    t1 = Tensor.make([2, 4, 6, 8], (2, 2), backend=SimpleBackend)
-    assert all((t1 - 1)._tensor._storage == [1.0, 3.0, 5.0, 7.0])
+    assert all(t2._tensor._storage == [12, 15, 18, 21]) 
 
 
 @given(tensors())
