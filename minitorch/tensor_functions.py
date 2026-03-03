@@ -105,7 +105,10 @@ class Mul(Function):
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
         a, b = ctx.saved_tensors
-        return grad_output*b, grad_output*a
+        return (
+            grad_output.f.mul_zip(grad_output, b),
+            grad_output.f.mul_zip(a, grad_output)
+        )
 
 
 class Sigmoid(Function):
@@ -119,42 +122,44 @@ class Sigmoid(Function):
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         t1, sigt1 = ctx.saved_tensors
         grad = sigt1 * (tensor([1]) - sigt1)
-        return grad
+        return grad * grad_output
 
 
 class ReLU(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor) -> Tensor:
-        # TODO: Implement for Task 2.3.
+        ctx.save_for_backward(t1)
         return t1.f.relu_map(t1)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError("Need to implement for Task 2.4")
+        (t1, ) = ctx.saved_tensors
+        return (t1 > 0) * grad_output
 
 
 class Log(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor) -> Tensor:
-        # TODO: Implement for Task 2.3.
+        ctx.save_for_backward(t1)
         return t1.f.log_map(t1)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError("Need to implement for Task 2.4")
+        (t1, ) = ctx.saved_tensors
+        return grad_output / t1
 
 
 class Exp(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor) -> Tensor:
+        ctx.save_for_backward(t1)
         return t1.f.exp_map(t1)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError("Need to implement for Task 2.4")
+        (t1, ) = ctx.saved_tensors
+        fprime = t1.exp()
+        return grad_output * fprime
 
 
 class Sum(Function):
@@ -181,43 +186,49 @@ class All(Function):
 class LT(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
+        ctx.save_for_backward(a, b)
         return a.f.lt_zip(a, b)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError("Need to implement for Task 2.4")
-
+        return grad_output.zeros(grad_output.shape), grad_output.zeros(grad_output.shape)
 
 class EQ(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
+        ctx.save_for_backward(a, b)
         return a.f.eq_zip(a, b)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError("Need to implement for Task 2.4")
+       return grad_output.zeros(grad_output.shape), grad_output.zeros(grad_output.shape)
 
 
 class IsClose(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        return a.f.is_close_zip(a, b)
 
 
 class Permute(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, order: Tensor) -> Tensor:
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        # Convert order tensor to tuple of ints
+        order_tuple = tuple(int(order[i]) for i in range(order.size))
+        ctx.save_for_backward(order_tuple)
+        return a._new(a._tensor.permute(*order_tuple))
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
         # TODO: Implement for Task 2.4.
-        raise NotImplementedError("Need to implement for Task 2.4")
-
+        (order,) = ctx.saved_values
+        # Create inverse permutation
+        inv_order = [0] * len(order)
+        for i, j in enumerate(order):
+            inv_order[j] = i
+        # Permute gradient back to original shape
+        return grad_output._new(grad_output._tensor.permute(*inv_order)), 0.0
 
 class View(Function):
     @staticmethod

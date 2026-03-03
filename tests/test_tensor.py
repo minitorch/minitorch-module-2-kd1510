@@ -38,14 +38,14 @@ def test_krish_zip():
 
 def test_krish_sigmoid():
     from torch import tensor as torchtensor
-    x1 = torchtensor([1., 2.], requires_grad=True)
-    z1 = x1.sigmoid().sum()
+    x1 = torchtensor([-1., 1.], requires_grad=True)
+    z1 = x1.relu().sum()
     z1.backward()
     print(x1, x1.grad)
 
-    x2 = Tensor.make([1, 2], shape=(2,), backend=SimpleBackend)
+    x2 = Tensor.make([-1, 1], shape=(2,), backend=SimpleBackend)
     x2.requires_grad_(True)
-    z2 = x2.sigmoid().sum(dim=0)
+    z2 = x2.relu().sum(dim=0)
     z2.backward()
 
     print(x2, x2.grad)

@@ -153,6 +153,8 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
                 raise IndexingError(f"Cannot broadcast shapes {shape1} x {shape2}. Dim {i} cannot match dim {j}")
             union.append(max(i, j))
 
+        return tuple(union)
+
     else:
         revs1 = list(reversed(shape1))
         revs2 = list(reversed(shape2))
