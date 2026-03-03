@@ -99,23 +99,27 @@ class Add(Function):
 class Mul(Function):
     @staticmethod
     def forward(ctx: Context, a: Tensor, b: Tensor) -> Tensor:
+        ctx.save_for_backward(a, b)
         return a.f.mul_zip(a, b)
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError("Need to implement for Task 2.4")
+        a, b = ctx.saved_tensors
+        return grad_output*b, grad_output*a
 
 
 class Sigmoid(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor) -> Tensor:
-        return t1.f.sigmoid_map(t1)
+        sigmoid = t1.f.sigmoid_map(t1)
+        ctx.save_for_backward(t1, sigmoid)
+        return sigmoid
 
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
-        # TODO: Implement for Task 2.4.
-        raise NotImplementedError("Need to implement for Task 2.4")
+        t1, sigt1 = ctx.saved_tensors
+        grad = sigt1 * (tensor([1]) - sigt1)
+        return grad
 
 
 class ReLU(Function):

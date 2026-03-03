@@ -69,6 +69,9 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     def dfs(variable: Variable, ordered: list[Variable]):
         visited_ids.append(variable.unique_id)
 
+        if not variable.history:
+            return
+
         for dep in variable.history.inputs:
             if dep.unique_id not in visited_ids:
                 dfs(dep, ordered)

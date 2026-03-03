@@ -36,16 +36,20 @@ def test_krish_zip():
     t2 = Tensor.make([10, 100], (2, 1), backend=SimpleBackend)
     assert all((t1 + t2)._tensor._storage == [11, 12, 103, 104])
 
-def test_krish_reduce():
-    # t1 = Tensor.make([1,3,5,7], (4,), backend=SimpleBackend)
-    # t1.sum(dim=0)
-    
-    # t1 = Tensor.make([i for i in range(12)], (3, 2, 2), backend=SimpleBackend)
-    t1 = Tensor.make([i for i in range(6)], (2, 3), backend=SimpleBackend)
-    t2 = t1.sum(dim=0)
+def test_krish_sigmoid():
+    from torch import tensor as torchtensor
+    x1 = torchtensor([1., 2.], requires_grad=True)
+    z1 = x1.sigmoid().sum()
+    z1.backward()
+    print(x1, x1.grad)
 
-    assert all(t2._tensor._storage == [12, 15, 18, 21]) 
+    x2 = Tensor.make([1, 2], shape=(2,), backend=SimpleBackend)
+    x2.requires_grad_(True)
+    z2 = x2.sigmoid().sum(dim=0)
+    z2.backward()
 
+    print(x2, x2.grad)
+    breakpoint()
 
 @given(tensors())
 @pytest.mark.task2_3
