@@ -21,8 +21,13 @@ class Network(minitorch.Module):
         self.layer3 = Linear(hidden_layers, 1)
 
     def forward(self, x):
-        # TODO: Implement for Task 2.5.
-        raise NotImplementedError("Need to implement for Task 2.5")
+        # Layer 1: Linear + ReLU
+        h1 = self.layer1.forward(x).relu()
+        # Layer 2: Linear + ReLU
+        h2 = self.layer2.forward(h1).relu()
+        # Layer 3: Linear + Sigmoid (output layer)
+        out = self.layer3.forward(h2).sigmoid()
+        return out
 
 
 class Linear(minitorch.Module):
@@ -33,8 +38,13 @@ class Linear(minitorch.Module):
         self.out_size = out_size
 
     def forward(self, x):
-        # TODO: Implement for Task 2.5.
-        raise NotImplementedError("Need to implement for Task 2.5")
+        x_ext = x.view(*x.shape, 1)
+        w_ext = self.weights.value.view(1, *self.weights.value.shape)
+        mult = x_ext * w_ext
+        reduced = mult.sum(dim=1)
+        reduced_views = reduced.view(x.shape[0], self.weights.value.shape[1])
+
+        return reduced_views + self.bias.value
 
 
 def default_log_fn(epoch, total_loss, correct, losses):
@@ -53,7 +63,6 @@ class TensorTrain:
         return self.model.forward(minitorch.tensor(X))
 
     def train(self, data, learning_rate, max_epochs=500, log_fn=default_log_fn):
-
         self.learning_rate = learning_rate
         self.max_epochs = max_epochs
         self.model = Network(self.hidden_layers)

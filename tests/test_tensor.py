@@ -1,5 +1,6 @@
 from typing import Callable, Iterable, List, Tuple
 
+from minitorch.tensor_ops import SimpleBackend
 import pytest
 from hypothesis import given
 from hypothesis.strategies import DataObject, data, lists, permutations
@@ -19,6 +20,36 @@ def test_create(t1: List[float]) -> None:
     for i in range(len(t1)):
         assert t1[i] == t2[i]
 
+def test_krish_zip():
+    # (1, 4) x (1, 4)
+    t1 = Tensor.make([1, 2, 3, 4], (1, 4), backend=SimpleBackend)
+    t2 = Tensor.make([1, 1, 1, 1], (1, 4), backend=SimpleBackend)
+    assert all((t1 + t2)._tensor._storage == [2, 3, 4, 5])
+
+    # # # # (1, 4) x (1, 1)
+    t1 = Tensor.make([1, 2, 3, 4], (1, 4), backend=SimpleBackend)
+    t2 = Tensor.make([1], (1,), backend=SimpleBackend)
+    assert all((t1 + t2)._tensor._storage == [2, 3, 4, 5])
+
+    # # # (2, 2) x (2, 1)
+    t1 = Tensor.make([1, 2, 3, 4], (2, 2), backend=SimpleBackend)
+    t2 = Tensor.make([10, 100], (2, 1), backend=SimpleBackend)
+    assert all((t1 + t2)._tensor._storage == [11, 12, 103, 104])
+
+def test_krish_sigmoid():
+    from torch import tensor as torchtensor
+    x1 = torchtensor([-1., 1.], requires_grad=True)
+    z1 = x1.relu().sum()
+    z1.backward()
+    print(x1, x1.grad)
+
+    x2 = Tensor.make([-1, 1], shape=(2,), backend=SimpleBackend)
+    x2.requires_grad_(True)
+    z2 = x2.relu().sum(dim=0)
+    z2.backward()
+
+    print(x2, x2.grad)
+    breakpoint()
 
 @given(tensors())
 @pytest.mark.task2_3

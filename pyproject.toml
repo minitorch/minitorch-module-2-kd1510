@@ -1,0 +1,29 @@
+[project]
+name = "minitorch-module-2-kd1510"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "colorama==0.4.3",
+    "datasets>=4.5.0",
+    "embeddings>=0.0.8",
+    "hypothesis>=6.151.9",
+    "ipdb>=0.13.13",
+    "mypy>=1.19.1",
+    "networkx>=3.6.1",
+    "numba>=0.64.0",
+    "numpy>=2.4.2",
+    "plotly>=6.5.2",
+    "pre-commit>=4.5.1",
+    "pydot>=4.0.1",
+    "pytest>=9.0.2",
+    "pytest-env>=1.5.0",
+    "pytest-runner>=6.0.1",
+    "python-mnist>=0.7",
+    "streamlit>=1.54.0",
+    "streamlit-ace>=0.1.1",
+    "torch>=2.10.0",
+    "typing-extensions>=4.15.0",
+    "watchdog>=6.0.0",
+]

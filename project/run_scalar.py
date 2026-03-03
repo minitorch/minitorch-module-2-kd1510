@@ -2,15 +2,21 @@
 Be sure you have minitorch installed in you Virtual Env.
 >>> pip install -Ue .
 """
+
 import random
 
 import minitorch
+
+from minitorch.scalar import Scalar
 
 
 class Network(minitorch.Module):
     def __init__(self, hidden_layers):
         super().__init__()
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 1.5.
+        self.layer1 = Linear(2, hidden_layers) 
+        self.layer2 = Linear(hidden_layers, hidden_layers)
+        self.layer3 = Linear(hidden_layers, 1) 
 
     def forward(self, x):
         middle = [h.relu() for h in self.layer1.forward(x)]
@@ -28,18 +34,27 @@ class Linear(minitorch.Module):
             for j in range(out_size):
                 self.weights[i].append(
                     self.add_parameter(
-                        f"weight_{i}_{j}", minitorch.Scalar(2 * (random.random() - 0.5))
+                        f"weight_{i}_{j}", Scalar(2 * (random.random() - 0.5))
                     )
                 )
         for j in range(out_size):
             self.bias.append(
                 self.add_parameter(
-                    f"bias_{j}", minitorch.Scalar(2 * (random.random() - 0.5))
+                    f"bias_{j}", Scalar(2 * (random.random() - 0.5))
                 )
             )
 
     def forward(self, inputs):
-        raise NotImplementedError("Need to include this file from past assignment.")
+        # TODO: Implement for Task 1.5.
+        output = []
+        for i in range(len(self.bias)):
+            y = 0
+            for j in range(len(inputs)):
+                y += self.weights[j][i].value * inputs[j] + self.bias[i].value
+
+            output.append(y)
+
+        return output
 
 
 def default_log_fn(epoch, total_loss, correct, losses):
@@ -53,7 +68,7 @@ class ScalarTrain:
 
     def run_one(self, x):
         return self.model.forward(
-            (minitorch.Scalar(x[0], name="x_1"), minitorch.Scalar(x[1], name="x_2"))
+            (Scalar(x[0], name="x_1"), Scalar(x[1], name="x_2"))
         )
 
     def train(self, data, learning_rate, max_epochs=500, log_fn=default_log_fn):
@@ -73,8 +88,8 @@ class ScalarTrain:
             for i in range(data.N):
                 x_1, x_2 = data.X[i]
                 y = data.y[i]
-                x_1 = minitorch.Scalar(x_1)
-                x_2 = minitorch.Scalar(x_2)
+                x_1 = Scalar(x_1)
+                x_2 = Scalar(x_2)
                 out = self.model.forward((x_1, x_2))
 
                 if y == 1:
@@ -99,7 +114,7 @@ class ScalarTrain:
 
 if __name__ == "__main__":
     PTS = 50
-    HIDDEN = 2
-    RATE = 0.5
+    HIDDEN = 3 
+    RATE = 0.1
     data = minitorch.datasets["Simple"](PTS)
     ScalarTrain(HIDDEN).train(data, RATE)
